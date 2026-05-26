@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temporal Echo | A Zen Time-Rewind Puzzle Game</title>
+    <meta name="description" content="Coordinate with past clones of yourself to solve mind-bending time puzzles in this minimalist, turn-synchronous game.">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Mute/Sound Toggle Top Right -->
+    <div class="top-actions">
+        <button id="btn-sound" class="icon-btn" aria-label="Toggle Sound">
+            <svg id="sound-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Main Game Container -->
+    <div id="game-wrapper">
+
+        <!-- 1. START SCREEN -->
+        <div id="screen-start" class="screen active">
+            <div class="panel">
+                <div class="logo-container">
+                    <div class="logo-circle"></div>
+                </div>
+                <h1>TEMPORAL<span class="logo-echo">ECHO</span></h1>
+                <p>Align past iterations of your movements to depress pressure plates, disable copper gates, and stabilize the portal loop.</p>
+                <button id="btn-start-journey">Start Journey</button>
+            </div>
+        </div>
+
+        <!-- 2. LEVEL SELECT SCREEN -->
+        <div id="screen-select" class="screen">
+            <div class="panel" style="max-width: 600px;">
+                <h2>Select Timeline</h2>
+                <div class="level-grid" id="level-selection-grid">
+                    <!-- Cards will be dynamically injected here by game.js -->
+                </div>
+                <button id="btn-select-back" class="secondary">Back to Menu</button>
+            </div>
+        </div>
+
+        <!-- 3. GAME RUNNING SCREEN -->
+        <div id="screen-game" class="screen">
+            <!-- HUD Sidebar left/right depending on layout -->
+            <div class="game-sidebar">
+                <!-- Level Info -->
+                <div class="hud-box level-title-section">
+                    <div class="subtitle" id="hud-level-number">Timeline 01</div>
+                    <h3 id="hud-level-name">The First Echo</h3>
+                    <p id="hud-level-desc" style="margin-bottom: 0; font-size: 0.85rem; margin-top: 8px;">A clone repeats your previous steps to hold down the switch.</p>
+                </div>
+
+                <!-- Stats -->
+                <div class="hud-box stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-label">Steps</span>
+                        <span class="stat-value" id="hud-steps">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Echo Clones</span>
+                        <span class="stat-value" id="hud-clones">0<span class="sub">/ 3</span></span>
+                    </div>
+                </div>
+
+                <!-- Main Actions -->
+                <div class="hud-box control-buttons">
+                    <button id="btn-action-rewind" class="btn-rewind">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 2v6h6M21 12A9 9 0 0 0 6 5.3L3 8"></path>
+                            <path d="M21 22v-6h-6M3 12a9 9 0 0 0 15 6.7l3-2.7"></path>
+                        </svg>
+                        Rewind Time [R]
+                    </button>
+                    <button id="btn-action-restart" class="secondary">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+                        </svg>
+                        Restart Loop [Backspace]
+                    </button>
+                    <button id="btn-action-select" class="tertiary">
+                        Timelines [Esc]
+                    </button>
+                </div>
+
+                <!-- Game Legend / Controls Info -->
+                <div class="hud-box legend-box">
+                    <div class="legend-title">Legend</div>
+                    <div class="legend-item">
+                        <div class="legend-icon p"></div>
+                        <span>Active Self</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-icon c"></div>
+                        <span>Past Echo Clone</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-icon s"></div>
+                        <span>Pressure Plate</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-icon e"></div>
+                        <span>Portal Exit</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-icon w"></div>
+                        <span>Obstacle Wall</span>
+                    </div>
+                    <div style="margin-top: 10px; font-size: 0.75rem; border-top: 1px solid var(--bg-grid); padding-top: 8px;">
+                        Move: <strong>W, A, S, D</strong> or <strong>Arrows</strong>. Clones only move when you step.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Canvas Display and Win Modal overlay -->
+            <div class="game-main">
+                <div class="canvas-container">
+                    <canvas id="game-canvas" width="600" height="600"></canvas>
+
+                    <!-- Level Win Overlay Modal -->
+                    <div id="overlay-level-win" class="modal-overlay">
+                        <div class="modal-content">
+                            <h3>Timeline Aligned</h3>
+                            <div class="score-detail" id="win-score-text">Completed in 14 steps</div>
+                            <div class="modal-actions">
+                                <button id="btn-next-level">Next Timeline</button>
+                                <button id="btn-win-replay" class="secondary">Replay Level</button>
+                                <button id="btn-win-select" class="tertiary">Select Level</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. END GAME / SUCCESS SCREEN -->
+        <div id="screen-end" class="screen">
+            <div class="panel">
+                <div class="logo-container">
+                    <div class="logo-circle" style="background-color: var(--color-gold);"></div>
+                </div>
+                <h2>Temporal Sync Achieved</h2>
+                <p>Congratulations! You have successfully aligned all timelines and synchronized your actions across the grid. The loop is broken.</p>
+                <div style="margin-bottom: 24px; text-align: center;">
+                    <div style="font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Total Performance</div>
+                    <div style="font-size: 1.8rem; font-weight: 700; color: var(--color-player);" id="end-stats-text">64 steps • 5 loops</div>
+                </div>
+                <div style="display: flex; flex-direction: column; width: 100%; gap: 10px;">
+                    <button id="btn-replay-all">Play Again</button>
+                    <button id="btn-end-select" class="secondary">View Timelines</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="audio.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
