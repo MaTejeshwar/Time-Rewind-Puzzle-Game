@@ -136,8 +136,13 @@ class Game {
             this.rewindTime();
         });
 
-        // Game Action - Restart
+        // Game Action - Restart Loop
         document.getElementById("btn-action-restart").addEventListener("click", () => {
+            this.restartLoop();
+        });
+
+        // Game Action - Reset Level
+        document.getElementById("btn-action-reset-level").addEventListener("click", () => {
             this.resetLevel();
         });
 
@@ -241,6 +246,9 @@ class Game {
                     this.rewindTime();
                     return;
                 case 'backspace':
+                    this.restartLoop();
+                    return;
+                case 'delete':
                     this.resetLevel();
                     return;
                 case 'escape':
@@ -620,8 +628,47 @@ class Game {
         window.audioSynth.playFail();
         this.spawnDephaseParticles(this.player.x, this.player.y);
         
-        // Brief screen shake / flash by restarting level
-        this.resetLevel();
+        // Brief screen shake / flash by restarting loop
+        this.restartLoop();
+    }
+
+    /**
+     * Resets the player and all clones back to the beginning of the current loop,
+     * keeping all previously saved clones intact.
+     */
+    restartLoop() {
+        if (!this.level) return;
+        
+        // Reset player back to starting position
+        this.player.x = this.level.playerStart.x;
+        this.player.y = this.level.playerStart.y;
+        this.playerHistory = [{ x: this.player.x, y: this.player.y }];
+        this.stepsCount = 0;
+
+        // Reset all clones to their start coordinate for step 0
+        this.clones.forEach(clone => {
+            clone.x = clone.steps[0].x;
+            clone.y = clone.steps[0].y;
+            // Also reset visual positions if initialized
+            if (clone.animX !== undefined && clone.animY !== undefined) {
+                const cellSize = this.getCellSize();
+                const offsets = this.getOffsets();
+                clone.animX = clone.x * cellSize + offsets.x + cellSize / 2;
+                clone.animY = clone.y * cellSize + offsets.y + cellSize / 2;
+            }
+        });
+
+        // Snap player visual position as well
+        const cellSize = this.getCellSize();
+        const offsets = this.getOffsets();
+        this.player.animX = this.player.x * cellSize + offsets.x + cellSize / 2;
+        this.player.animY = this.player.y * cellSize + offsets.y + cellSize / 2;
+
+        this.particles = [];
+        this.isMoving = false;
+
+        this.updateHUD();
+        this.updateBoardState();
     }
 
     /**
