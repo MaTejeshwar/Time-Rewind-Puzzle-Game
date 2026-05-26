@@ -75,6 +75,16 @@ class Game {
         this.canvas = document.getElementById("game-canvas");
         this.ctx = this.canvas.getContext("2d");
         
+        // High-DPI (Retina) Canvas Rendering
+        const dpr = window.devicePixelRatio || 1;
+        const logicalWidth = this.canvas.width || 600;
+        const logicalHeight = this.canvas.height || 600;
+        this.canvas.width = logicalWidth * dpr;
+        this.canvas.height = logicalHeight * dpr;
+        this.canvas.style.width = `${logicalWidth}px`;
+        this.canvas.style.height = `${logicalHeight}px`;
+        this.ctx.scale(dpr, dpr);
+        
         // Navigation states
         this.currentLevelIndex = 0;
         this.maxLevelReached = 0;
